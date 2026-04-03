@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { Download, Route, MapPin, Navigation, Clock, Fuel, Loader2 } from "lucide-react";
+import { Download, Route, MapPin, Navigation, Clock, Fuel, Loader2, ExternalLink } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useAppData } from "../../context/AppDataContext";
@@ -241,6 +241,23 @@ export function RoutePlannerPage() {
     anchor.download = "binwatch-route-sheet.txt";
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  function redirectToGoogleMaps() {
+    if (routeBins.length === 0) return;
+
+    const origin = encodeURIComponent(`${DEPOT.lat},${DEPOT.lng}`);
+    const destination = origin; // Return to depot
+
+    // Google Maps supports up to ~25 waypoints in a URL
+    const waypointCoords = routeBins
+      .slice(0, 25)
+      .map((bin) => `${bin.lat},${bin.lng}`)
+      .join("|");
+    const waypoints = encodeURIComponent(waypointCoords);
+
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=driving`;
+    window.open(url, "_blank");
   }
 
   // Map positions for fitting bounds
@@ -546,13 +563,22 @@ export function RoutePlannerPage() {
                   title="Estimated CO₂ saved"
                   value={`${co2Saved.toFixed(1)} kg`}
                 />
-                <Button
-                  onClick={downloadRouteSheet}
-                  className="w-full bg-brand-900 text-white hover:bg-brand-700"
-                >
-                  <Download size={16} />
-                  Download Route Sheet
-                </Button>
+                <div className="flex flex-col gap-3">
+                  <Button
+                    onClick={redirectToGoogleMaps}
+                    className="w-full bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    <ExternalLink size={16} />
+                    Open in Google Maps
+                  </Button>
+                  <Button
+                    onClick={downloadRouteSheet}
+                    className="w-full bg-brand-900 text-white hover:bg-brand-700"
+                  >
+                    <Download size={16} />
+                    Download Route Sheet
+                  </Button>
+                </div>
               </Card>
             </div>
           </div>
