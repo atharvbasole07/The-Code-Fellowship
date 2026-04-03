@@ -39,12 +39,15 @@ export function SidebarHeader({ collapsed, onToggle }) {
     <div className="flex items-center justify-between border-b border-white/10 px-4 py-5">
       <div
         className={cn(
-          "hidden overflow-hidden transition-all lg:block",
+          "hidden overflow-hidden transition-all lg:flex lg:items-center lg:gap-3",
           collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
         )}
       >
-        <p className="text-xl font-semibold tracking-tight text-white">BinWatch</p>
-        <p className="text-xs text-emerald-100/70">Municipal operations</p>
+        <img src="/whitelogobin.jpeg" alt="BinWatch Logo" className="h-8 w-8 shrink-0 object-contain drop-shadow-sm rounded-md border border-black" />
+        <div className="whitespace-nowrap">
+          <p className="text-xl font-semibold tracking-tight text-white">BinWatch</p>
+          <p className="text-xs text-emerald-100/70">Municipal operations</p>
+        </div>
       </div>
       <button
         type="button"
@@ -60,9 +63,12 @@ export function SidebarHeader({ collapsed, onToggle }) {
 export function Topbar({ email, onLogout }) {
   return (
     <div className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur">
-      <div>
-        <p className="text-lg font-semibold text-slate-900">BinWatch</p>
-        <p className="text-sm text-slate-500">Real-time smart waste management for Pune</p>
+      <div className="flex items-center gap-4">
+        <img src="/whitelogobin.jpeg" alt="BinWatch Logo" className="h-10 w-10 object-contain drop-shadow-sm rounded-lg border border-black" />
+        <div>
+          <p className="text-lg font-semibold text-slate-900">BinWatch</p>
+          <p className="text-sm text-slate-500">Real-time smart waste management for Pune</p>
+        </div>
       </div>
       <div className="flex items-center gap-4">
         <div className="text-right">
