@@ -1,0 +1,233 @@
+import { useState } from "react";
+import {
+  AlertTriangle,
+  CloudSun,
+  Leaf,
+  PlugZap,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { useAppData } from "../../context/AppDataContext";
+import {
+  AlertRow,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  FillBar,
+  Field,
+  Input,
+  Modal,
+  PageShell,
+  SkeletonCard,
+  StatCard,
+} from "../../components/ui";
+import { fillColor, formatRelativeTime, number } from "../../lib/utils";
+import { useToast } from "../../context/ToastContext";
+
+export function DashboardHomePage() {
+  const { bins, alerts, zones, collectionEvents, loading, resolveAlert, markCollected } = useAppData();
+  const [selectedBin, setSelectedBin] = useState(null);
+  const [form, setForm] = useState({ truckId: "TR-21", driverName: "Field Crew", weightCollectedKg: "28", co2SavedKg: "18.5" });
+  const { success, error } = useToast();
+
+  const unresolvedAlerts = alerts.filter((entry) => !entry.resolved);
+  const needsCollection = bins.filter((bin) => bin.fill_level >= 80);
+  const totalCo2Saved = collectionEvents
+    .filter((event) => new Date(event.collected_at).getMonth() === new Date().getMonth())
+    .reduce((sum, event) => sum + Number(event.co2_saved_kg ?? 0), 0);
+
+  const kpis = [
+    { label: "Total Bins", value: number(bins.length), icon: Trash2 },
+    { label: "Bins Online", value: number(bins.filter((bin) => bin.is_online).length), icon: PlugZap },
+    { label: "Needs Collection", value: number(needsCollection.length), icon: AlertTriangle, alert: needsCollection.length > 0 },
+    {
+      label: "Average Fill Level",
+      value: `${number(bins.reduce((sum, bin) => sum + bin.fill_level, 0) / Math.max(1, bins.length))}%`,
+      icon: CloudSun,
+    },
+    { label: "Active Alerts", value: number(unresolvedAlerts.length), icon: TriangleAlert },
+    { label: "CO2 Saved This Month", value: `${number(totalCo2Saved, 1)} kg`, icon: Leaf },
+  ];
+
+  const distribution = [
+    { name: "0-25%", count: bins.filter((bin) => bin.fill_level <= 25).length, color: "#16a34a" },
+    { name: "26-50%", count: bins.filter((bin) => bin.fill_level > 25 && bin.fill_level <= 50).length, color: "#eab308" },
+    { name: "51-75%", count: bins.filter((bin) => bin.fill_level > 50 && bin.fill_level <= 75).length, color: "#f97316" },
+    { name: "76-100%", count: bins.filter((bin) => bin.fill_level > 75).length, color: "#dc2626" },
+  ];
+
+  async function handleResolve(alertId) {
+    const result = await resolveAlert(alertId);
+    if (result.error) {
+      error("Unable to resolve the alert right now.");
+      return;
+    }
+    success("Alert marked as resolved.");
+  }
+
+  async function handleCollectionSubmit(event) {
+    event.preventDefault();
+    const result = await markCollected(selectedBin, form);
+    if (result.error) {
+      error("Collection event could not be saved.");
+      return;
+    }
+    success("Collection logged successfully.");
+    setSelectedBin(null);
+  }
+
+  return (
+    <PageShell title="Operations Dashboard" subtitle="Live municipal sanitation overview across Pune.">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        {loading ? kpis.map((item) => <SkeletonCard key={item.label} />) : kpis.map((item) => <StatCard key={item.label} {...item} />)}
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
+        <Card>
+          <div className="mb-5">
+            <p className="text-lg font-semibold text-slate-900">Fill Level Distribution</p>
+            <p className="text-sm text-slate-500">Bin counts grouped by current capacity band.</p>
+          </div>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={distribution}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                <YAxis tickLine={false} axisLine={false} />
+                <Tooltip />
+                <Bar dataKey="count" radius={[12, 12, 0, 0]}>
+                  {distribution.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="mb-5">
+            <p className="text-lg font-semibold text-slate-900">Active Alerts</p>
+            <p className="text-sm text-slate-500">Open incidents requiring operator action.</p>
+          </div>
+          <div className="space-y-3">
+            {unresolvedAlerts.length ? (
+              unresolvedAlerts.slice(0, 5).map((alert) => (
+                <AlertRow
+                  key={alert.id}
+                  alert={alert}
+                  bin={bins.find((bin) => bin.id === alert.bin_id)}
+                  onResolve={() => handleResolve(alert.id)}
+                />
+              ))
+            ) : (
+              <EmptyState title="No active alerts" description="Everything is operating within expected thresholds right now." />
+            )}
+          </div>
+        </Card>
+      </div>
+
+      <Card>
+        <div className="mb-5">
+          <p className="text-lg font-semibold text-slate-900">Priority Bins</p>
+          <p className="text-sm text-slate-500">Highest fill level bins ranked for immediate collection.</p>
+        </div>
+        {bins.length ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="text-slate-500">
+                <tr>
+                  <th className="pb-3 font-medium">Bin Name</th>
+                  <th className="pb-3 font-medium">Zone</th>
+                  <th className="pb-3 font-medium">Fill Level</th>
+                  <th className="pb-3 font-medium">Odor</th>
+                  <th className="pb-3 font-medium">Battery</th>
+                  <th className="pb-3 font-medium">Status</th>
+                  <th className="pb-3 font-medium text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {[...bins]
+                  .sort((a, b) => b.fill_level - a.fill_level)
+                  .slice(0, 8)
+                  .map((bin) => {
+                    const zone = zones.find((entry) => entry.id === bin.zone_id);
+                    return (
+                      <tr key={bin.id}>
+                        <td className="py-4 font-medium text-slate-900">{bin.name}</td>
+                        <td className="py-4 text-slate-600">{zone?.name ?? "Unknown zone"}</td>
+                        <td className="py-4">
+                          <div className="w-40">
+                            <div className="mb-2 flex items-center justify-between">
+                              <span className={`text-sm font-semibold ${fillColor(bin.fill_level)}`}>{bin.fill_level}%</span>
+                              <span className="text-xs text-slate-400">{formatRelativeTime(bin.last_seen_at)}</span>
+                            </div>
+                            <FillBar value={bin.fill_level} />
+                          </div>
+                        </td>
+                        <td className="py-4 text-slate-600">{number(bin.odor_level, 1)}</td>
+                        <td className="py-4 text-slate-600">{bin.battery_level}%</td>
+                        <td className="py-4">
+                          <Badge className={bin.is_online ? "border-emerald-200 bg-emerald-100 text-emerald-700" : "border-red-200 bg-red-100 text-red-700"}>
+                            {bin.is_online ? "Online" : "Offline"}
+                          </Badge>
+                        </td>
+                        <td className="py-4 text-right">
+                          <Button onClick={() => setSelectedBin(bin)} className="bg-brand-700 text-white hover:bg-brand-900">
+                            Mark Collected
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState title="No bins available" description="Connect Supabase or add demo records to populate this view." />
+        )}
+      </Card>
+
+      <Modal open={Boolean(selectedBin)} title="Log collection event" onClose={() => setSelectedBin(null)}>
+        {selectedBin ? (
+          <form className="space-y-4" onSubmit={handleCollectionSubmit}>
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-900">{selectedBin.name}</p>
+              <p className="mt-1 text-sm text-slate-500">Current fill: {selectedBin.fill_level}%</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Truck ID">
+                <Input value={form.truckId} onChange={(event) => setForm((current) => ({ ...current, truckId: event.target.value }))} required />
+              </Field>
+              <Field label="Driver Name">
+                <Input value={form.driverName} onChange={(event) => setForm((current) => ({ ...current, driverName: event.target.value }))} required />
+              </Field>
+              <Field label="Weight Collected (kg)">
+                <Input type="number" value={form.weightCollectedKg} onChange={(event) => setForm((current) => ({ ...current, weightCollectedKg: event.target.value }))} required />
+              </Field>
+              <Field label="CO2 Saved (kg)">
+                <Input type="number" step="0.1" value={form.co2SavedKg} onChange={(event) => setForm((current) => ({ ...current, co2SavedKg: event.target.value }))} required />
+              </Field>
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit" className="bg-brand-700 text-white hover:bg-brand-900">
+                Save collection
+              </Button>
+            </div>
+          </form>
+        ) : null}
+      </Modal>
+    </PageShell>
+  );
+}
