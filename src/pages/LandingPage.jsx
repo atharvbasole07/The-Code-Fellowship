@@ -22,7 +22,7 @@ import {
   Github,
   Heart,
 } from "lucide-react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { heroImages, testimonials } from "../lib/demoData";
 import { useAuth } from "../context/AuthContext";
 import { Button, Field, Input, PasswordInput } from "../components/ui";
@@ -131,8 +131,8 @@ export function LandingPage() {
   const [driverPassword, setDriverPassword] = useState("binwatch-demo");
   const [driverError, setDriverError] = useState("");
   const [driverLoading, setDriverLoading] = useState(false);
+  const [pendingRedirect, setPendingRedirect] = useState(null);
   const { signIn, user, role } = useAuth();
-  const navigate = useNavigate();
 
   // Slideshow — increased to 8 seconds
   useEffect(() => {
@@ -151,34 +151,36 @@ export function LandingPage() {
   }, []);
 
   if (user) {
-    const redirectPath = role === "driver" ? "/driver" : "/dashboard";
+    const redirectPath = pendingRedirect ?? (role === "driver" ? "/driver" : "/dashboard");
     return <Navigate to={redirectPath} replace />;
   }
 
   async function handleUserSubmit(event) {
     event.preventDefault();
+    setPendingRedirect("/dashboard");
     setUserError("");
     setUserLoading(true);
     const { error: signInError } = await signIn(userEmail, userPassword, "user");
     setUserLoading(false);
     if (signInError) {
+      setPendingRedirect(null);
       setUserError(signInError.message);
       return;
     }
-    navigate("/dashboard");
   }
 
   async function handleDriverSubmit(event) {
     event.preventDefault();
+    setPendingRedirect("/driver");
     setDriverError("");
     setDriverLoading(true);
     const { error: signInError } = await signIn(driverEmail, driverPassword, "driver");
     setDriverLoading(false);
     if (signInError) {
+      setPendingRedirect(null);
       setDriverError(signInError.message);
       return;
     }
-    navigate("/driver");
   }
 
   const tagColor = (tag) => {
