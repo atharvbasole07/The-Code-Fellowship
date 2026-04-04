@@ -9,6 +9,40 @@ function normalizeRole(role) {
   return role === "driver" ? "driver" : DEFAULT_ROLE;
 }
 
+function normalizeEmail(email) {
+  return String(email ?? "").trim().toLowerCase();
+}
+
+async function getDriverByEmail(email) {
+  const normalizedEmail = normalizeEmail(email);
+  if (!hasSupabaseEnv || !normalizedEmail) return { driver: null, error: null };
+
+  const { data, error } = await supabase
+    .from("drivers")
+    .select("id, email, is_active")
+    .eq("email", normalizedEmail)
+    .maybeSingle();
+
+  if (error) return { driver: null, error };
+  return { driver: data ?? null, error: null };
+}
+
+async function resolveRoleFromSession(nextSession) {
+  if (!nextSession) return null;
+
+  const metadataRole = normalizeRole(
+    nextSession.role ?? nextSession.user?.app_metadata?.role ?? nextSession.user?.user_metadata?.role
+  );
+
+  const { driver, error } = await getDriverByEmail(nextSession.user?.email);
+  if (error) {
+    console.warn("Driver lookup failed. Falling back to session metadata role.", error.message);
+    return metadataRole;
+  }
+
+  return driver?.is_active ? "driver" : metadataRole;
+}
+
 function attachRole(session, fallbackRole = DEFAULT_ROLE) {
   if (!session) return null;
   const metadataRole = session.user?.app_metadata?.role ?? session.user?.user_metadata?.role;
@@ -23,6 +57,15 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
+
+    async function hydrateSession(nextSession) {
+      const resolvedRole = await resolveRoleFromSession(nextSession);
+      if (!active) return;
+      setSession(attachRole(nextSession, resolvedRole ?? DEFAULT_ROLE));
+      setLoading(false);
+    }
+
     if (!hasSupabaseEnv) {
       const saved = localStorage.getItem(DEMO_SESSION_KEY);
       if (saved) {
@@ -38,27 +81,30 @@ export function AuthProvider({ children }) {
     }
 
     supabase.auth.getSession().then(({ data }) => {
-      setSession(attachRole(data.session));
-      setLoading(false);
+      hydrateSession(data.session);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(attachRole(nextSession));
-      setLoading(false);
+      hydrateSession(nextSession);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function signIn(email, password, role = DEFAULT_ROLE) {
+    const normalizedRole = normalizeRole(role);
+    const normalizedEmail = normalizeEmail(email);
+
     if (!hasSupabaseEnv) {
-      const normalizedRole = normalizeRole(role);
       const demoSession = {
         user: {
           id: `demo-${normalizedRole}`,
-          email,
+          email: normalizedEmail,
         },
         role: normalizedRole,
       };
@@ -67,8 +113,45 @@ export function AuthProvider({ children }) {
       return { error: null };
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+    if (error) return { error };
+
+    const { driver, error: driverLookupError } = await getDriverByEmail(normalizedEmail);
+    if (driverLookupError) {
+      await supabase.auth.signOut();
+      return {
+        error: {
+          message: "Unable to verify driver profile from Supabase. Please apply the latest schema changes.",
+        },
+      };
+    }
+
+    const isDriverEmail = Boolean(driver?.is_active);
+    if (normalizedRole === "driver" && !isDriverEmail) {
+      await supabase.auth.signOut();
+      return {
+        error: {
+          message: "Driver profile was not found for this email. Use a registered driver email or contact admin.",
+        },
+      };
+    }
+
+    if (normalizedRole === "user" && isDriverEmail) {
+      await supabase.auth.signOut();
+      return {
+        error: {
+          message: "This account is registered as a driver. Please use Driver Login.",
+        },
+      };
+    }
+
+    const resolvedRole = isDriverEmail ? "driver" : DEFAULT_ROLE;
+    const {
+      data: { session: nextSession },
+    } = await supabase.auth.getSession();
+    setSession(attachRole(nextSession, resolvedRole));
+
+    return { error: null };
   }
 
   async function signOut() {

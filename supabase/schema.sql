@@ -8,6 +8,39 @@ create table if not exists zones (
   created_at timestamptz default now()
 );
 
+create table if not exists drivers (
+  id uuid primary key default gen_random_uuid(),
+  email text not null check (email = lower(email)),
+  full_name text not null,
+  phone text,
+  employee_code text,
+  truck_id text,
+  assigned_zone_id uuid references zones(id),
+  is_active boolean not null default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create unique index if not exists drivers_email_unique_idx on drivers (lower(email));
+create unique index if not exists drivers_employee_code_unique_idx on drivers (employee_code) where employee_code is not null;
+create unique index if not exists drivers_truck_id_unique_idx on drivers (truck_id) where truck_id is not null;
+
+create or replace function set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_drivers_updated_at on drivers;
+create trigger set_drivers_updated_at
+before update on drivers
+for each row
+execute function set_updated_at();
+
 create table if not exists bins (
   id uuid primary key default gen_random_uuid(),
   zone_id uuid references zones(id),
@@ -56,50 +89,89 @@ create table if not exists collection_events (
 );
 
 alter table zones enable row level security;
+alter table drivers enable row level security;
 alter table bins enable row level security;
 alter table fill_history enable row level security;
 alter table alerts enable row level security;
 alter table collection_events enable row level security;
 
+drop policy if exists "authenticated can read zones" on zones;
+
 create policy "authenticated can read zones" on zones
 for select to authenticated using (true);
+
+drop policy if exists "authenticated can read own driver profile" on drivers;
+
+create policy "authenticated can read own driver profile" on drivers
+for select to authenticated using (lower(email) = lower(coalesce(auth.jwt()->>'email', '')));
+
+drop policy if exists "authenticated can read bins" on bins;
 
 create policy "authenticated can read bins" on bins
 for select to authenticated using (true);
 
+drop policy if exists "authenticated can read fill history" on fill_history;
+
 create policy "authenticated can read fill history" on fill_history
 for select to authenticated using (true);
+
+drop policy if exists "authenticated can read alerts" on alerts;
 
 create policy "authenticated can read alerts" on alerts
 for select to authenticated using (true);
 
+drop policy if exists "authenticated can read collection events" on collection_events;
+
 create policy "authenticated can read collection events" on collection_events
 for select to authenticated using (true);
+
+drop policy if exists "authenticated can update alerts" on alerts;
 
 create policy "authenticated can update alerts" on alerts
 for update to authenticated using (true) with check (true);
 
+drop policy if exists "authenticated can insert collection events" on collection_events;
+
 create policy "authenticated can insert collection events" on collection_events
 for insert to authenticated with check (true);
 
+drop policy if exists "authenticated can update bins" on bins;
+
 create policy "authenticated can update bins" on bins
 for update to authenticated using (true) with check (true);
+
+drop policy if exists "anon can create citizen alerts" on alerts;
 
 create policy "anon can create citizen alerts" on alerts
 for insert to anon
 with check (severity = 'medium');
 
+drop policy if exists "service role can manage zones" on zones;
+
 create policy "service role can manage zones" on zones
 for all to service_role using (true) with check (true);
+
+drop policy if exists "service role can manage drivers" on drivers;
+
+create policy "service role can manage drivers" on drivers
+for all to service_role using (true) with check (true);
+
+drop policy if exists "service role can manage bins" on bins;
 
 create policy "service role can manage bins" on bins
 for all to service_role using (true) with check (true);
 
+drop policy if exists "service role can manage fill history" on fill_history;
+
 create policy "service role can manage fill history" on fill_history
 for all to service_role using (true) with check (true);
 
+drop policy if exists "service role can manage alerts" on alerts;
+
 create policy "service role can manage alerts" on alerts
 for all to service_role using (true) with check (true);
+
+drop policy if exists "service role can manage collection events" on collection_events;
 
 create policy "service role can manage collection events" on collection_events
 for all to service_role using (true) with check (true);

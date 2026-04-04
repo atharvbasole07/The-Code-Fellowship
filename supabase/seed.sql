@@ -6,6 +6,13 @@ values
   ('0f2f1800-97e2-4cfd-a1b9-511394f7f8b0', 'Kothrud', 'Pune', 'LoRaWAN')
 on conflict (id) do nothing;
 
+insert into drivers (id, email, full_name, phone, employee_code, truck_id, assigned_zone_id, is_active)
+values
+  ('8cb373ce-63de-4db6-95af-9ce58858788a', 'driver@pune.gov.in', 'A. Shinde', '+91-9876543210', 'DRV-001', 'TR-02', '479123a0-a26e-4a1c-970d-91cc794f5d74', true),
+  ('5d2de13f-24b1-4698-aaf7-86a0f009a6a5', 'kpatil@pune.gov.in', 'K. Patil', '+91-9876543211', 'DRV-002', 'TR-11', '0f2f1800-97e2-4cfd-a1b9-511394f7f8b0', true),
+  ('1e53e6f1-ae8b-4d5e-808f-a99f6d9f6eb0', 'njadhav@pune.gov.in', 'N. Jadhav', '+91-9876543212', 'DRV-003', 'TR-14', '9fd20fca-01d2-4440-b5b5-6859c3a109f1', true)
+on conflict (id) do nothing;
+
 insert into bins (id, zone_id, name, lat, lng, fill_level, weight_kg, odor_level, temperature_c, battery_level, is_online, last_seen_at)
 values
   ('11d4017b-f899-4c42-841e-a140f8b094c5','9fd20fca-01d2-4440-b5b5-6859c3a109f1','KP-01 River Walk',18.5368,73.8941,88,41.2,8.2,32.1,38,true,now() - interval '24 minutes'),
