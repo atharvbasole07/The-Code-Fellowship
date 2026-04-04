@@ -1,6 +1,7 @@
-import { X, Eye, EyeOff, Loader2, LogOut, Menu } from "lucide-react";
+import { X, Eye, EyeOff, Loader2, LogOut, Menu, Languages } from "lucide-react";
 import { useState } from "react";
 import { cn, fillBar, formatDateTime, severityColor } from "../lib/utils";
+import { useLanguage } from "../context/LanguageContext";
 
 export function PageShell({ title, subtitle, children, actions }) {
   return (
@@ -35,6 +36,8 @@ export function EmptyState({ title, description }) {
 }
 
 export function SidebarHeader({ collapsed, onToggle }) {
+  const { tr } = useLanguage();
+
   return (
     <div className="flex items-center justify-between border-b border-white/10 px-4 py-5">
       <div
@@ -45,8 +48,8 @@ export function SidebarHeader({ collapsed, onToggle }) {
       >
         <img src="/whitelogobin.jpeg" alt="BinWatch Logo" className="h-8 w-8 shrink-0 object-contain drop-shadow-sm rounded-md border border-black" />
         <div className="whitespace-nowrap">
-          <p className="text-xl font-semibold tracking-tight text-white">BinWatch</p>
-          <p className="text-xs text-emerald-100/70">Municipal operations</p>
+          <p className="text-xl font-semibold tracking-tight text-white">{tr("BinWatch", "बिनवॉच")}</p>
+          <p className="text-xs text-emerald-100/70">{tr("Municipal operations", "महानगरपालिका ऑपरेशन्स")}</p>
         </div>
       </div>
       <button
@@ -61,27 +64,37 @@ export function SidebarHeader({ collapsed, onToggle }) {
 }
 
 export function Topbar({ email, onLogout }) {
+  const { isMarathi, toggleLanguage, tr } = useLanguage();
+
   return (
     <div className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur">
       <div className="flex items-center gap-4">
         <img src="/whitelogobin.jpeg" alt="BinWatch Logo" className="h-10 w-10 object-contain drop-shadow-sm rounded-lg border border-black" />
         <div>
-          <p className="text-lg font-semibold text-slate-900">BinWatch</p>
-          <p className="text-sm text-slate-500">Real-time smart waste management for Pune</p>
+          <p className="text-lg font-semibold text-slate-900">{tr("BinWatch", "बिनवॉच")}</p>
+          <p className="text-sm text-slate-500">{tr("Real-time smart waste management for Pune", "पुण्यासाठी रिअल-टाइम स्मार्ट कचरा व्यवस्थापन")}</p>
         </div>
       </div>
       <div className="flex items-center gap-4">
         <div className="text-right">
-          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Logged in as</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{tr("Logged in as", "लॉगिन")}</p>
           <p className="text-sm font-medium text-slate-700">{email}</p>
         </div>
+        <button
+          type="button"
+          onClick={toggleLanguage}
+          className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-600 hover:text-blue-700"
+        >
+          <Languages size={16} />
+          {isMarathi ? "English" : "मराठी"}
+        </button>
         <button
           type="button"
           onClick={onLogout}
           className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-brand-700 hover:text-brand-700"
         >
           <LogOut size={16} />
-          Logout
+          {tr("Logout", "लॉगआउट")}
         </button>
       </div>
     </div>
@@ -239,6 +252,8 @@ export function PasswordInput({ value, onChange, placeholder }) {
 }
 
 export function AlertRow({ alert, bin, onResolve, showAction = true }) {
+  const { tr } = useLanguage();
+
   return (
     <div className="grid gap-3 rounded-2xl border border-slate-200 px-4 py-4 lg:grid-cols-[120px_1fr_160px_120px] lg:items-center">
       <div>
@@ -256,11 +271,11 @@ export function AlertRow({ alert, bin, onResolve, showAction = true }) {
       {showAction ? (
         <div className="flex justify-start lg:justify-end">
           <Button onClick={onResolve} className="bg-brand-700 text-white hover:bg-brand-900">
-            Resolve
+            {tr("Resolve", "निकाली काढा")}
           </Button>
         </div>
       ) : (
-        <p className="text-sm font-medium text-emerald-700">Resolved</p>
+        <p className="text-sm font-medium text-emerald-700">{tr("Resolved", "निकाली")}</p>
       )}
     </div>
   );

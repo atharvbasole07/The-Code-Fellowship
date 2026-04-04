@@ -7,16 +7,19 @@ import "./index.css";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import { AppDataProvider } from "./context/AppDataContext";
+import { LanguageProvider } from "./context/LanguageContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <ToastProvider>
-        <AuthProvider>
-          <AppDataProvider>
-            <App />
-          </AppDataProvider>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <AppDataProvider>
+              <App />
+            </AppDataProvider>
+          </AuthProvider>
+        </LanguageProvider>
       </ToastProvider>
     </BrowserRouter>
   </React.StrictMode>

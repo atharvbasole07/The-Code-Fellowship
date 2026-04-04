@@ -3,6 +3,7 @@ import { LocateFixed, Send } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import { useToast } from "../../context/ToastContext";
 import { Button, Card, EmptyState, Field, PageShell, Select, Textarea, Input } from "../../components/ui";
+import { useLanguage } from "../../context/LanguageContext";
 
 export function CitizenPortalPage({ standalone = false }) {
   const { bins, zones, submitCitizenReport } = useAppData();
@@ -15,6 +16,7 @@ export function CitizenPortalPage({ standalone = false }) {
     photoName: "",
   });
   const { success, error } = useToast();
+  const { tr } = useLanguage();
 
   useEffect(() => {
     if (!form.binId && bins.length) {
@@ -23,9 +25,9 @@ export function CitizenPortalPage({ standalone = false }) {
   }, [bins, form.binId]);
 
   function estimateNextCollection(fillLevel) {
-    if (fillLevel >= 85) return "Within 2 hours";
-    if (fillLevel >= 60) return "Today by evening";
-    return "Within 24 hours";
+    if (fillLevel >= 85) return tr("Within 2 hours", "2 तासांच्या आत");
+    if (fillLevel >= 60) return tr("Today by evening", "आज संध्याकाळपर्यंत");
+    return tr("Within 24 hours", "24 तासांच्या आत");
   }
 
   function findNearestBins() {
@@ -70,12 +72,12 @@ export function CitizenPortalPage({ standalone = false }) {
       <Card className="space-y-5">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-lg font-semibold text-slate-900">Find Bins Near You</p>
-            <p className="text-sm text-slate-500">Locate the five closest monitored bins using your current device position.</p>
+            <p className="text-lg font-semibold text-slate-900">{tr("Find Bins Near You", "जवळच्या कचरापेट्या शोधा")}</p>
+            <p className="text-sm text-slate-500">{tr("Locate the five closest monitored bins using your current device position.", "आपल्या सध्याच्या स्थानावरून पाच सर्वात जवळच्या मॉनिटर केलेल्या कचरापेट्या शोधा.")}</p>
           </div>
           <Button onClick={findNearestBins} loading={locating} className="bg-brand-700 text-white hover:bg-brand-900">
             <LocateFixed size={16} />
-            Find Bins Near You
+            {tr("Find Bins Near You", "जवळच्या कचरापेट्या शोधा")}
           </Button>
         </div>
         {nearestBins.length ? (
@@ -89,23 +91,23 @@ export function CitizenPortalPage({ standalone = false }) {
                   </div>
                   <p className="text-sm font-medium text-brand-700">{bin.distance.toFixed(2)} km</p>
                 </div>
-                <p className="mt-3 text-sm text-slate-600">Fill level {bin.fill_level}%</p>
-                <p className="mt-1 text-sm text-slate-500">Estimated next collection: {estimateNextCollection(bin.fill_level)}</p>
+                <p className="mt-3 text-sm text-slate-600">{tr("Fill level", "भरलेले प्रमाण")} {bin.fill_level}%</p>
+                <p className="mt-1 text-sm text-slate-500">{tr("Estimated next collection", "पुढील अंदाजित संकलन")}: {estimateNextCollection(bin.fill_level)}</p>
               </div>
             ))}
           </div>
         ) : (
-          <EmptyState title="Nearest bins not loaded yet" description="Allow location access to view nearby monitored bins and collection estimates." />
+          <EmptyState title={tr("Nearest bins not loaded yet", "जवळच्या कचरापेट्या अजून लोड झालेल्या नाहीत")} description={tr("Allow location access to view nearby monitored bins and collection estimates.", "जवळच्या मॉनिटर केलेल्या कचरापेट्या आणि संकलन अंदाज पाहण्यासाठी स्थान परवानगी द्या.")} />
         )}
       </Card>
 
       <Card>
         <div className="mb-5">
-          <p className="text-lg font-semibold text-slate-900">Report an Issue</p>
-          <p className="text-sm text-slate-500">Submit overflow, damage, illegal dumping, or odor complaints for review.</p>
+          <p className="text-lg font-semibold text-slate-900">{tr("Report an Issue", "समस्या नोंदवा")}</p>
+          <p className="text-sm text-slate-500">{tr("Submit overflow, damage, illegal dumping, or odor complaints for review.", "ओसंडणे, नुकसान, बेकायदेशीर कचरा टाकणे किंवा दुर्गंधी याबाबत तक्रार नोंदवा.")}</p>
         </div>
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <Field label="Select bin">
+          <Field label={tr("Select bin", "कचरापेटी निवडा")}>
             <Select value={form.binId} onChange={(event) => setForm((current) => ({ ...current, binId: event.target.value }))}>
               {bins.map((bin) => (
                 <option key={bin.id} value={bin.id}>
@@ -114,23 +116,23 @@ export function CitizenPortalPage({ standalone = false }) {
               ))}
             </Select>
           </Field>
-          <Field label="Issue type">
+          <Field label={tr("Issue type", "समस्येचा प्रकार")}>
             <Select value={form.issueType} onChange={(event) => setForm((current) => ({ ...current, issueType: event.target.value }))}>
-              <option value="overflow">Overflow</option>
-              <option value="damage">Damage</option>
-              <option value="illegal dumping">Illegal dumping</option>
-              <option value="odor">Odor</option>
+              <option value="overflow">{tr("Overflow", "ओसंडणे")}</option>
+              <option value="damage">{tr("Damage", "नुकसान")}</option>
+              <option value="illegal dumping">{tr("Illegal dumping", "बेकायदेशीर कचरा टाकणे")}</option>
+              <option value="odor">{tr("Odor", "दुर्गंधी")}</option>
             </Select>
           </Field>
-          <Field label="Description">
+          <Field label={tr("Description", "वर्णन")}>
             <Textarea
               value={form.description}
               onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-              placeholder="Describe the issue you observed..."
+              placeholder={tr("Describe the issue you observed...", "तुम्ही पाहिलेली समस्या लिहा...")}
               required
             />
           </Field>
-          <Field label="Photo upload">
+          <Field label={tr("Photo upload", "फोटो अपलोड")}>
             <Input
               type="file"
               accept="image/*"
@@ -141,7 +143,7 @@ export function CitizenPortalPage({ standalone = false }) {
           </Field>
           <Button type="submit" className="w-full bg-brand-900 text-white hover:bg-brand-700">
             <Send size={16} />
-            Submit
+            {tr("Submit", "सबमिट")}
           </Button>
         </form>
       </Card>
@@ -150,7 +152,7 @@ export function CitizenPortalPage({ standalone = false }) {
 
   if (standalone) return content;
 
-  return <PageShell title="Citizen Portal Preview" subtitle="Public-facing reporting and discovery tools for residents.">{content}</PageShell>;
+  return <PageShell title={tr("Citizen Portal Preview", "नागरिक पोर्टल पूर्वावलोकन")} subtitle={tr("Public-facing reporting and discovery tools for residents.", "नागरिकांसाठी सार्वजनिक तक्रार आणि शोध साधने.")}>{content}</PageShell>;
 }
 
 function haversine(lat1, lon1, lat2, lon2) {

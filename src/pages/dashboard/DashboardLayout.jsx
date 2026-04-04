@@ -4,20 +4,22 @@ import { NavLink, Outlet } from "react-router-dom";
 import { SidebarHeader, Topbar } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../context/AuthContext";
-
-const navItems = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/dashboard/bins", label: "Bins", icon: Trash2 },
-  { to: "/dashboard/route", label: "Route Planner", icon: Map },
-  { to: "/dashboard/map", label: "City Map", icon: MapPin },
-  { to: "/dashboard/alerts", label: "Alerts", icon: Bell },
-  { to: "/dashboard/analytics", label: "Analytics", icon: ChartColumn },
-  { to: "/dashboard/citizen", label: "Citizen Portal", icon: Users },
-];
+import { useLanguage } from "../../context/LanguageContext";
 
 export function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const { user, signOut } = useAuth();
+  const { tr } = useLanguage();
+
+  const navItems = [
+    { to: "/dashboard", label: tr("Dashboard", "डॅशबोर्ड"), icon: LayoutDashboard, end: true },
+    { to: "/dashboard/bins", label: tr("Bins", "कचरापेट्या"), icon: Trash2 },
+    { to: "/dashboard/route", label: tr("Route Planner", "मार्ग नियोजन"), icon: Map },
+    { to: "/dashboard/map", label: tr("City Map", "शहर नकाशा"), icon: MapPin },
+    { to: "/dashboard/alerts", label: tr("Alerts", "अलर्ट्स"), icon: Bell },
+    { to: "/dashboard/analytics", label: tr("Analytics", "विश्लेषण"), icon: ChartColumn },
+    { to: "/dashboard/citizen", label: tr("Citizen Portal", "नागरिक पोर्टल"), icon: Users },
+  ];
 
   return (
     <div className="flex min-h-screen bg-slate-100">

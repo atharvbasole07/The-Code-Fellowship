@@ -15,10 +15,12 @@ import { ChartColumn, Leaf, Scale, TrendingUp } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import { Card, PageShell, Select, StatCard } from "../../components/ui";
 import { number } from "../../lib/utils";
+import { useLanguage } from "../../context/LanguageContext";
 
 export function AnalyticsPage() {
   const { bins, fillHistory, collectionEvents, zones, alerts } = useAppData();
   const [range, setRange] = useState("30");
+  const { tr } = useLanguage();
   const days = Number(range);
   const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
 
@@ -52,27 +54,27 @@ export function AnalyticsPage() {
 
   return (
     <PageShell
-      title="Analytics"
-      subtitle="Historical trends for fill, collection performance, and zone health."
+      title={tr("Analytics", "विश्लेषण")}
+      subtitle={tr("Historical trends for fill, collection performance, and zone health.", "भरण्याची पातळी, संकलन कार्यक्षमता आणि विभागीय स्थितीचे ऐतिहासिक ट्रेंड.")}
       actions={
         <Select value={range} onChange={(event) => setRange(event.target.value)} className="w-40">
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="90">Last 90 days</option>
+          <option value="7">{tr("Last 7 days", "मागील ७ दिवस")}</option>
+          <option value="30">{tr("Last 30 days", "मागील ३० दिवस")}</option>
+          <option value="90">{tr("Last 90 days", "मागील ९० दिवस")}</option>
         </Select>
       }
     >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard icon={Scale} label="Total Waste Collected" value={`${number(totalWaste, 1)} kg`} />
-        <StatCard icon={Leaf} label="Total CO2 Saved" value={`${number(totalCo2, 1)} kg`} />
-        <StatCard icon={ChartColumn} label="Avg Fill at Collection" value={`${number(avgFillAtCollection, 1)}%`} />
-        <StatCard icon={TrendingUp} label="Trip Efficiency Improvement" value={`${number(tripImprovement, 1)}%`} />
+        <StatCard icon={Scale} label={tr("Total Waste Collected", "एकूण गोळा केलेला कचरा")} value={`${number(totalWaste, 1)} kg`} />
+        <StatCard icon={Leaf} label={tr("Total CO2 Saved", "एकूण वाचवलेले CO2")} value={`${number(totalCo2, 1)} kg`} />
+        <StatCard icon={ChartColumn} label={tr("Avg Fill at Collection", "संकलनावेळी सरासरी भरण्याची पातळी")} value={`${number(avgFillAtCollection, 1)}%`} />
+        <StatCard icon={TrendingUp} label={tr("Trip Efficiency Improvement", "ट्रिप कार्यक्षमतेत सुधारणा")} value={`${number(tripImprovement, 1)}%`} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>
           <div className="mb-5">
-            <p className="text-lg font-semibold text-slate-900">Average Fill Level per Day</p>
+            <p className="text-lg font-semibold text-slate-900">{tr("Average Fill Level per Day", "दररोजची सरासरी भरण्याची पातळी")}</p>
           </div>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -89,7 +91,7 @@ export function AnalyticsPage() {
 
         <Card>
           <div className="mb-5">
-            <p className="text-lg font-semibold text-slate-900">Collection Events per Zone</p>
+            <p className="text-lg font-semibold text-slate-900">{tr("Collection Events per Zone", "प्रत्येक विभागातील संकलन घटना")}</p>
           </div>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -108,17 +110,17 @@ export function AnalyticsPage() {
 
       <Card>
         <div className="mb-5">
-          <p className="text-lg font-semibold text-slate-900">Zone Breakdown</p>
+          <p className="text-lg font-semibold text-slate-900">{tr("Zone Breakdown", "विभागनिहाय तपशील")}</p>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="text-slate-500">
               <tr>
-                <th className="pb-3 font-medium">Zone</th>
-                <th className="pb-3 font-medium">Bin Count</th>
-                <th className="pb-3 font-medium">Avg Fill</th>
-                <th className="pb-3 font-medium">Collections This Month</th>
-                <th className="pb-3 font-medium">Alerts This Month</th>
+                <th className="pb-3 font-medium">{tr("Zone", "विभाग")}</th>
+                <th className="pb-3 font-medium">{tr("Bin Count", "कचरापेट्यांची संख्या")}</th>
+                <th className="pb-3 font-medium">{tr("Avg Fill", "सरासरी भरणे")}</th>
+                <th className="pb-3 font-medium">{tr("Collections This Month", "या महिन्यातील संकलन")}</th>
+                <th className="pb-3 font-medium">{tr("Alerts This Month", "या महिन्यातील अलर्ट्स")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

@@ -2,12 +2,14 @@ import { CircleMarker, MapContainer, Popup, TileLayer } from "react-leaflet";
 import { useAppData } from "../../context/AppDataContext";
 import { Card, PageShell } from "../../components/ui";
 import { formatDateTime } from "../../lib/utils";
+import { useLanguage } from "../../context/LanguageContext";
 
 export function CityMapPage() {
   const { bins, zones } = useAppData();
+  const { tr } = useLanguage();
 
   return (
-    <PageShell title="City Map" subtitle="Spatial view of current bin status centered on Pune.">
+    <PageShell title={tr("City Map", "शहर नकाशा")} subtitle={tr("Spatial view of current bin status centered on Pune.", "पुणे केंद्रित वर्तमान कचरापेटी स्थितीचा स्थानिक आढावा.")}>
       <Card className="relative h-[72vh] overflow-hidden p-0">
         <MapContainer center={[18.5204, 73.8567]} zoom={13} scrollWheelZoom className="h-full w-full">
           <TileLayer
@@ -26,9 +28,9 @@ export function CityMapPage() {
                 <Popup>
                   <div className="space-y-1">
                     <p className="font-semibold">{bin.name}</p>
-                    <p>Fill: {bin.fill_level}%</p>
-                    <p>Zone: {zones.find((zone) => zone.id === bin.zone_id)?.name}</p>
-                    <p>Last seen: {formatDateTime(bin.last_seen_at)}</p>
+                    <p>{tr("Fill", "भरलेले")}: {bin.fill_level}%</p>
+                    <p>{tr("Zone", "विभाग")}: {zones.find((zone) => zone.id === bin.zone_id)?.name}</p>
+                    <p>{tr("Last seen", "शेवटचे दिसले")}: {formatDateTime(bin.last_seen_at)}</p>
                   </div>
                 </Popup>
               </CircleMarker>
@@ -36,10 +38,10 @@ export function CityMapPage() {
           })}
         </MapContainer>
         <div className="absolute bottom-4 right-4 z-[500] rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-panel">
-          <p className="mb-3 text-sm font-semibold text-slate-900">Legend</p>
-          <Legend color="bg-emerald-500" label="Below 60%" />
-          <Legend color="bg-yellow-500" label="60% to 79%" />
-          <Legend color="bg-red-500" label="80% and above" pulse />
+          <p className="mb-3 text-sm font-semibold text-slate-900">{tr("Legend", "लेजेन्ड")}</p>
+          <Legend color="bg-emerald-500" label={tr("Below 60%", "60% पेक्षा कमी")} />
+          <Legend color="bg-yellow-500" label={tr("60% to 79%", "60% ते 79%")} />
+          <Legend color="bg-red-500" label={tr("80% and above", "80% आणि अधिक")} pulse />
         </div>
       </Card>
     </PageShell>

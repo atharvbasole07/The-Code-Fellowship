@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, useMap 
 import L from "leaflet";
 import { useAppData } from "../../context/AppDataContext";
 import { Button, Card, EmptyState, PageShell } from "../../components/ui";
+import { useLanguage } from "../../context/LanguageContext";
 
 /* ── Custom numbered marker icon factory ── */
 function numberedIcon(number, color = "#1B5E20") {
@@ -162,6 +163,7 @@ const DEPOT = { lat: 18.5204, lng: 73.8567, name: "PMC Headquarters" };
 
 export function RoutePlannerPage() {
   const { bins, zones } = useAppData();
+  const { tr } = useLanguage();
   const [threshold, setThreshold] = useState(60);
   const [generated, setGenerated] = useState(false);
   const [routeData, setRouteData] = useState(null);
@@ -210,7 +212,7 @@ export function RoutePlannerPage() {
         distance: null,
         duration: null,
       });
-      setRouteError("Road routing unavailable. Showing straight-line route.");
+      setRouteError(tr("Road routing unavailable. Showing straight-line route.", "रस्त्याचा मार्ग उपलब्ध नाही. सरळ रेषेचा मार्ग दाखवला आहे."));
     }
     setLoading(false);
   }
@@ -267,8 +269,8 @@ export function RoutePlannerPage() {
 
   return (
     <PageShell
-      title="Route Planner"
-      subtitle="Generate optimized collection routes visualized on the map — like Google Maps for waste trucks."
+      title={tr("Route Planner", "मार्ग नियोजन")}
+      subtitle={tr("Generate optimized collection routes visualized on the map — like Google Maps for waste trucks.", "नकाशावर दिसणारे अनुकूलित संकलन मार्ग तयार करा — कचरा ट्रकसाठी Google Maps प्रमाणे.")}
       actions={
         <Button
           onClick={generateRoute}
@@ -280,7 +282,7 @@ export function RoutePlannerPage() {
           ) : (
             <Route size={16} />
           )}
-          {loading ? "Generating Route..." : "Generate Optimal Route"}
+          {loading ? tr("Generating Route...", "मार्ग तयार होत आहे...") : tr("Generate Optimal Route", "अनुकूल मार्ग तयार करा")}
         </Button>
       }
     >
@@ -288,8 +290,8 @@ export function RoutePlannerPage() {
       <Card>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-lg font-semibold text-slate-900">Collection Threshold</p>
-            <p className="text-sm text-slate-500">Bins at or above this fill level are added to the route.</p>
+            <p className="text-lg font-semibold text-slate-900">{tr("Collection Threshold", "संकलन मर्यादा")}</p>
+            <p className="text-sm text-slate-500">{tr("Bins at or above this fill level are added to the route.", "या पातळीइतके किंवा जास्त भरलेले डबे मार्गात जोडले जातील.")}</p>
           </div>
           <div className="flex w-full max-w-md items-center gap-4">
             <input
@@ -334,7 +336,7 @@ export function RoutePlannerPage() {
                     <Popup>
                       <div className="space-y-1">
                         <p className="font-semibold">🏛️ {DEPOT.name}</p>
-                        <p className="text-sm text-slate-500">Start / End Point (Depot)</p>
+                        <p className="text-sm text-slate-500">{tr("Start / End Point (Depot)", "सुरुवात / शेवट बिंदू (डेपो)")}</p>
                       </div>
                     </Popup>
                   </Marker>
@@ -356,15 +358,15 @@ export function RoutePlannerPage() {
                         <Popup>
                           <div className="space-y-1">
                             <p className="font-semibold">
-                              Stop #{index + 1}: {bin.name}
+                              {tr("Stop", "थांबा")} #{index + 1}: {bin.name}
                             </p>
-                            <p>Fill: {bin.fill_level}%</p>
+                            <p>{tr("Fill", "भरलेले")}: {bin.fill_level}%</p>
                             <p>
-                              Zone:{" "}
+                              {tr("Zone", "विभाग")}:{" "}
                               {zones.find((z) => z.id === bin.zone_id)?.name}
                             </p>
-                            <p>Odor: {bin.odor_level}</p>
-                            <p>Status: {bin.is_online ? "🟢 Online" : "🔴 Offline"}</p>
+                            <p>{tr("Odor", "दुर्गंधी")}: {bin.odor_level}</p>
+                            <p>{tr("Status", "स्थिती")}: {bin.is_online ? `🟢 ${tr("Online", "ऑनलाइन")}` : `🔴 ${tr("Offline", "ऑफलाइन")}`}</p>
                           </div>
                         </Popup>
                       </Marker>
@@ -383,11 +385,11 @@ export function RoutePlannerPage() {
 
               {/* Route stats overlay */}
               <div className="absolute bottom-4 left-4 z-[500] rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-panel backdrop-blur">
-                <p className="mb-2 text-sm font-semibold text-slate-900">Route Overview</p>
+                <p className="mb-2 text-sm font-semibold text-slate-900">{tr("Route Overview", "मार्ग आढावा")}</p>
                 <div className="flex flex-wrap gap-4 text-sm">
                   <div className="flex items-center gap-1.5 text-slate-600">
                     <MapPin size={14} className="text-brand-700" />
-                    <span>{routeBins.length} stops</span>
+                    <span>{routeBins.length} {tr("stops", "थांबे")}</span>
                   </div>
                   {routeData?.distance && (
                     <div className="flex items-center gap-1.5 text-slate-600">
@@ -406,27 +408,27 @@ export function RoutePlannerPage() {
 
               {/* Legend */}
               <div className="absolute top-4 right-4 z-[500] rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-panel backdrop-blur">
-                <p className="mb-2 text-sm font-semibold text-slate-900">Legend</p>
+                <p className="mb-2 text-sm font-semibold text-slate-900">{tr("Legend", "लेजेन्ड")}</p>
                 <div className="space-y-1.5 text-xs text-slate-600">
                   <div className="flex items-center gap-2">
                     <span className="inline-block h-3 w-3 rounded-full bg-slate-700" />
-                    Depot (Start/End)
+                    {tr("Depot (Start/End)", "डेपो (सुरुवात/शेवट)")}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="inline-block h-3 w-3 rounded-full bg-red-600" />
-                    Fill ≥ 80%
+                    {tr("Fill ≥ 80%", "भरलेले ≥ 80%")}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="inline-block h-3 w-3 rounded-full bg-amber-500" />
-                    Fill 60–79%
+                    {tr("Fill 60–79%", "भरलेले 60–79%")}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="inline-block h-3 w-3 rounded-full bg-emerald-600" />
-                    Fill &lt; 60%
+                    {tr("Fill < 60%", "भरलेले < 60%")}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="inline-block h-1 w-6 rounded bg-[#1B5E20]" />
-                    Route path
+                    {tr("Route path", "मार्ग")}
                   </div>
                 </div>
               </div>
@@ -443,11 +445,10 @@ export function RoutePlannerPage() {
               <Card>
                 <div className="mb-5">
                   <p className="text-lg font-semibold text-slate-900">
-                    Optimized Collection Sequence
+                    {tr("Optimized Collection Sequence", "अनुकूलित संकलन क्रम")}
                   </p>
                   <p className="mt-1 text-sm text-slate-500">
-                    Route follows nearest-neighbor optimization from the depot and
-                    back.
+                    {tr("Route follows nearest-neighbor optimization from the depot and back.", "मार्ग डेपोपासून आणि डेपोपर्यंत जवळच्या बिंदूनुसार अनुकूलित केला जातो.")}
                   </p>
                 </div>
                 <ol className="space-y-3">
@@ -461,7 +462,7 @@ export function RoutePlannerPage() {
                         🏛️ {DEPOT.name}
                       </p>
                       <p className="mt-1 text-sm text-slate-500">
-                        Start point — Truck depot
+                        {tr("Start point — Truck depot", "सुरुवातीचा बिंदू — ट्रक डेपो")}
                       </p>
                     </div>
                   </li>
@@ -529,7 +530,7 @@ export function RoutePlannerPage() {
                         🏛️ {DEPOT.name}
                       </p>
                       <p className="mt-1 text-sm text-slate-500">
-                        End point — Return to depot
+                        {tr("End point — Return to depot", "शेवटचा बिंदू — डेपोला परत")}
                       </p>
                     </div>
                   </li>
@@ -539,28 +540,28 @@ export function RoutePlannerPage() {
               <Card className="space-y-4">
                 <div>
                   <p className="text-lg font-semibold text-slate-900">
-                    Route Impact Summary
+                    {tr("Route Impact Summary", "मार्ग प्रभाव सारांश")}
                   </p>
                 </div>
-                <Summary title="Total bins to collect" value={routeBins.length} />
+                <Summary title={tr("Total bins to collect", "संकलनासाठी एकूण कचरापेट्या")} value={routeBins.length} />
                 {routeData?.distance && (
                   <Summary
-                    title="Total route distance"
+                    title={tr("Total route distance", "एकूण मार्ग अंतर")}
                     value={`${(routeData.distance / 1000).toFixed(1)} km`}
                   />
                 )}
                 {routeData?.duration && (
                   <Summary
-                    title="Estimated driving time"
+                    title={tr("Estimated driving time", "अंदाजे प्रवास वेळ")}
                     value={`${Math.round(routeData.duration / 60)} min`}
                   />
                 )}
                 <Summary
-                  title="Estimated fuel saved vs fixed schedule"
+                  title={tr("Estimated fuel saved vs fixed schedule", "स्थिर वेळापत्रकापेक्षा अंदाजे इंधन बचत")}
                   value={`₹ ${fuelSaved.toFixed(0)}`}
                 />
                 <Summary
-                  title="Estimated CO₂ saved"
+                  title={tr("Estimated CO₂ saved", "अंदाजे वाचलेले CO₂")}
                   value={`${co2Saved.toFixed(1)} kg`}
                 />
                 <div className="flex flex-col gap-3">
@@ -569,14 +570,14 @@ export function RoutePlannerPage() {
                     className="w-full bg-blue-600 text-white hover:bg-blue-700"
                   >
                     <ExternalLink size={16} />
-                    Open in Google Maps
+                    {tr("Open in Google Maps", "Google Maps मध्ये उघडा")}
                   </Button>
                   <Button
                     onClick={downloadRouteSheet}
                     className="w-full bg-brand-900 text-white hover:bg-brand-700"
                   >
                     <Download size={16} />
-                    Download Route Sheet
+                    {tr("Download Route Sheet", "मार्ग पत्रक डाउनलोड करा")}
                   </Button>
                 </div>
               </Card>
@@ -584,14 +585,14 @@ export function RoutePlannerPage() {
           </div>
         ) : (
           <EmptyState
-            title="No bins require collection"
-            description="Raise or lower the threshold and generate the route again when conditions change."
+            title={tr("No bins require collection", "कोणत्याही कचरापेटीस संकलनाची गरज नाही")}
+            description={tr("Raise or lower the threshold and generate the route again when conditions change.", "स्थिती बदलल्यावर मर्यादा वाढवा/कमी करा आणि पुन्हा मार्ग तयार करा.")}
           />
         )
       ) : (
         <EmptyState
-          title="Route not generated yet"
-          description="Use the Generate Optimal Route action to create a prioritized collection sequence with map visualization."
+          title={tr("Route not generated yet", "मार्ग अजून तयार झालेला नाही")}
+          description={tr("Use the Generate Optimal Route action to create a prioritized collection sequence with map visualization.", "प्राधान्यक्रमित संकलन क्रम तयार करण्यासाठी 'अनुकूल मार्ग तयार करा' वापरा.")}
         />
       )}
     </PageShell>

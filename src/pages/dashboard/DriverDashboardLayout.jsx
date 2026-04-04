@@ -4,16 +4,18 @@ import { NavLink, Outlet } from "react-router-dom";
 import { Topbar } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../context/AuthContext";
-
-const navItems = [
-  { to: "/driver", label: "Route Planner", icon: Map, end: true },
-  { to: "/driver/bins", label: "Bins", icon: Trash2 },
-  { to: "/driver/alerts", label: "Alerts", icon: Bell },
-];
+import { useLanguage } from "../../context/LanguageContext";
 
 export function DriverDashboardLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const { user, signOut } = useAuth();
+  const { tr } = useLanguage();
+
+  const navItems = [
+    { to: "/driver", label: tr("Route Planner", "मार्ग नियोजन"), icon: Map, end: true },
+    { to: "/driver/bins", label: tr("Bins", "कचरापेट्या"), icon: Trash2 },
+    { to: "/driver/alerts", label: tr("Alerts", "अलर्ट्स"), icon: Bell },
+  ];
 
   return (
     <div className="flex min-h-screen bg-slate-100">
@@ -36,8 +38,8 @@ export function DriverDashboardLayout() {
               className="h-8 w-8 shrink-0 rounded-md border border-black object-contain drop-shadow-sm"
             />
             <div className="whitespace-nowrap">
-              <p className="text-xl font-semibold tracking-tight text-white">Driver Panel</p>
-              <p className="text-xs text-blue-100/70">Field operations</p>
+              <p className="text-xl font-semibold tracking-tight text-white">{tr("Driver Panel", "ड्रायव्हर पॅनेल")}</p>
+              <p className="text-xs text-blue-100/70">{tr("Field operations", "मैदानी ऑपरेशन्स")}</p>
             </div>
           </div>
           <button
