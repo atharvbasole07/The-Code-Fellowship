@@ -1,8 +1,9 @@
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { LandingPage } from "./pages/LandingPage";
 import { CitizenPreviewPage } from "./pages/CitizenPreviewPage";
 import { DashboardLayout } from "./pages/dashboard/DashboardLayout";
+import { DriverDashboardLayout } from "./pages/dashboard/DriverDashboardLayout";
 import { DashboardHomePage } from "./pages/dashboard/DashboardHomePage";
 import { BinsPage } from "./pages/dashboard/BinsPage";
 import { RoutePlannerPage } from "./pages/dashboard/RoutePlannerPage";
@@ -12,11 +13,19 @@ import { AnalyticsPage } from "./pages/dashboard/AnalyticsPage";
 import { CitizenPortalPage } from "./pages/dashboard/CitizenPortalPage";
 
 function ProtectedRoute() {
-  const { user, loading } = useAuth();
+  const { user, role, loading } = useAuth();
+  const location = useLocation();
+  const currentRole = role === "driver" ? "driver" : "user";
+
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center text-slate-500">Loading BinWatch...</div>;
   }
-  return user ? <Outlet /> : <Navigate to="/" replace />;
+
+  if (!user) return <Navigate to="/" replace />;
+  if (currentRole === "driver" && location.pathname.startsWith("/dashboard")) return <Navigate to="/driver" replace />;
+  if (currentRole === "user" && location.pathname.startsWith("/driver")) return <Navigate to="/dashboard" replace />;
+
+  return <Outlet />;
 }
 
 export default function App() {
@@ -33,6 +42,11 @@ export default function App() {
           <Route path="alerts" element={<AlertsPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="citizen" element={<CitizenPortalPage />} />
+        </Route>
+        <Route path="/driver" element={<DriverDashboardLayout />}>
+          <Route index element={<RoutePlannerPage />} />
+          <Route path="bins" element={<BinsPage />} />
+          <Route path="alerts" element={<AlertsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -6,6 +6,7 @@ import {
   Lightbulb,
   Newspaper,
   Recycle,
+  Shield,
   Trash2,
   Truck,
   ExternalLink,
@@ -122,11 +123,15 @@ const usefulLinks = [
 export function LandingPage() {
   const [activeImage, setActiveImage] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [email, setEmail] = useState("commissioner@pune.gov.in");
-  const [password, setPassword] = useState("binwatch-demo");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { signIn, user } = useAuth();
+  const [userEmail, setUserEmail] = useState("commissioner@pune.gov.in");
+  const [userPassword, setUserPassword] = useState("binwatch-demo");
+  const [userError, setUserError] = useState("");
+  const [userLoading, setUserLoading] = useState(false);
+  const [driverEmail, setDriverEmail] = useState("driver@pune.gov.in");
+  const [driverPassword, setDriverPassword] = useState("binwatch-demo");
+  const [driverError, setDriverError] = useState("");
+  const [driverLoading, setDriverLoading] = useState(false);
+  const { signIn, user, role } = useAuth();
   const navigate = useNavigate();
 
   // Slideshow — increased to 8 seconds
@@ -145,19 +150,35 @@ export function LandingPage() {
     return () => window.clearInterval(interval);
   }, []);
 
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (user) {
+    const redirectPath = role === "driver" ? "/driver" : "/dashboard";
+    return <Navigate to={redirectPath} replace />;
+  }
 
-  async function handleSubmit(event) {
+  async function handleUserSubmit(event) {
     event.preventDefault();
-    setError("");
-    setLoading(true);
-    const { error: signInError } = await signIn(email, password);
-    setLoading(false);
+    setUserError("");
+    setUserLoading(true);
+    const { error: signInError } = await signIn(userEmail, userPassword, "user");
+    setUserLoading(false);
     if (signInError) {
-      setError(signInError.message);
+      setUserError(signInError.message);
       return;
     }
     navigate("/dashboard");
+  }
+
+  async function handleDriverSubmit(event) {
+    event.preventDefault();
+    setDriverError("");
+    setDriverLoading(true);
+    const { error: signInError } = await signIn(driverEmail, driverPassword, "driver");
+    setDriverLoading(false);
+    if (signInError) {
+      setDriverError(signInError.message);
+      return;
+    }
+    navigate("/driver");
   }
 
   const tagColor = (tag) => {
@@ -362,27 +383,29 @@ export function LandingPage() {
       {/* ── RIGHT COLUMN: login at top + useful links below ── */}
       <aside className="bg-slate-100 px-6 py-10 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
         <div className="flex flex-col gap-8">
-          {/* Login Card — pinned to top */}
+          {/* User Login Card */}
           <div className="w-full max-w-md mx-auto rounded-[2rem] border-l-4 border-brand-700 bg-white p-8 shadow-panel">
             <div className="mb-6 flex items-center gap-4">
-              <img src="/whitelogobin.jpeg" alt="BinWatch Logo" className="h-14 w-14 object-contain drop-shadow-md rounded-xl border border-black" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-brand-200 bg-brand-50 text-brand-800">
+                <Shield size={26} />
+              </div>
               <div>
-                <p className="text-3xl font-semibold text-brand-900">BinWatch</p>
-                <p className="mt-1 text-sm text-slate-500">Municipal Login</p>
+                <p className="text-2xl font-semibold text-brand-900">User Login</p>
+                <p className="mt-1 text-sm text-slate-500">Admin / Staff Login</p>
               </div>
             </div>
             <div className="mb-6 h-px bg-slate-200" />
-            <form className="space-y-5" onSubmit={handleSubmit}>
+            <form className="space-y-5" onSubmit={handleUserSubmit}>
               <Field label="Email Address">
-                <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@municipality.gov.in" required />
+                <Input type="email" value={userEmail} onChange={(event) => setUserEmail(event.target.value)} placeholder="commissioner@pune.gov.in" required />
               </Field>
               <Field label="Password">
-                <PasswordInput value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter password" />
+                <PasswordInput value={userPassword} onChange={(event) => setUserPassword(event.target.value)} placeholder="Enter password" />
               </Field>
-              <Button type="submit" loading={loading} className="w-full bg-brand-900 text-white hover:bg-brand-700">
-                Sign In
+              <Button type="submit" loading={userLoading} className="w-full bg-brand-900 text-white hover:bg-brand-700">
+                Sign In as User
               </Button>
-              {error ? <p className="text-sm text-red-600">{error}</p> : null}
+              {userError ? <p className="text-sm text-red-600">{userError}</p> : null}
             </form>
             <div className="mt-5 flex items-center justify-between gap-4 text-sm text-slate-500">
               <button type="button" className="transition hover:text-brand-700">
@@ -394,6 +417,35 @@ export function LandingPage() {
             </div>
             <p className="mt-8 text-xs leading-6 text-slate-400">
               Access restricted to authorized municipal staff only.
+            </p>
+          </div>
+
+          {/* Driver Login Card */}
+          <div className="w-full max-w-md mx-auto rounded-[2rem] border-l-4 border-blue-700 bg-white p-8 shadow-panel">
+            <div className="mb-6 flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-700">
+                <Truck size={26} />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold text-blue-900">Driver Login</p>
+                <p className="mt-1 text-sm text-slate-500">Driver Login</p>
+              </div>
+            </div>
+            <div className="mb-6 h-px bg-slate-200" />
+            <form className="space-y-5" onSubmit={handleDriverSubmit}>
+              <Field label="Email Address">
+                <Input type="email" value={driverEmail} onChange={(event) => setDriverEmail(event.target.value)} placeholder="driver@pune.gov.in" required />
+              </Field>
+              <Field label="Password">
+                <PasswordInput value={driverPassword} onChange={(event) => setDriverPassword(event.target.value)} placeholder="Enter password" />
+              </Field>
+              <Button type="submit" loading={driverLoading} className="w-full bg-blue-900 text-white hover:bg-blue-800">
+                Sign In as Driver
+              </Button>
+              {driverError ? <p className="text-sm text-red-600">{driverError}</p> : null}
+            </form>
+            <p className="mt-8 text-xs leading-6 text-slate-400">
+              Use your assigned driver credentials to access route and bin operations.
             </p>
           </div>
 

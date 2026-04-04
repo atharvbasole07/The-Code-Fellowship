@@ -3,6 +3,20 @@ import { supabase, hasSupabaseEnv } from "../lib/supabase";
 
 const AuthContext = createContext(null);
 const DEMO_SESSION_KEY = "binwatch-demo-session";
+const DEFAULT_ROLE = "user";
+
+function normalizeRole(role) {
+  return role === "driver" ? "driver" : DEFAULT_ROLE;
+}
+
+function attachRole(session, fallbackRole = DEFAULT_ROLE) {
+  if (!session) return null;
+  const metadataRole = session.user?.app_metadata?.role ?? session.user?.user_metadata?.role;
+  return {
+    ...session,
+    role: normalizeRole(session.role ?? metadataRole ?? fallbackRole),
+  };
+}
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -11,33 +25,42 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!hasSupabaseEnv) {
       const saved = localStorage.getItem(DEMO_SESSION_KEY);
-      if (saved) setSession(JSON.parse(saved));
+      if (saved) {
+        try {
+          const parsedSession = JSON.parse(saved);
+          setSession(attachRole(parsedSession));
+        } catch (_error) {
+          localStorage.removeItem(DEMO_SESSION_KEY);
+        }
+      }
       setLoading(false);
       return undefined;
     }
 
     supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+      setSession(attachRole(data.session));
       setLoading(false);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
+      setSession(attachRole(nextSession));
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  async function signIn(email, password) {
+  async function signIn(email, password, role = DEFAULT_ROLE) {
     if (!hasSupabaseEnv) {
+      const normalizedRole = normalizeRole(role);
       const demoSession = {
         user: {
-          id: "demo-user",
+          id: `demo-${normalizedRole}`,
           email,
         },
+        role: normalizedRole,
       };
       localStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(demoSession));
       setSession(demoSession);
@@ -62,6 +85,7 @@ export function AuthProvider({ children }) {
       value={{
         session,
         user: session?.user ?? null,
+        role: session ? normalizeRole(session.role) : null,
         loading,
         signIn,
         signOut,
