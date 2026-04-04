@@ -22,7 +22,7 @@ import {
   Github,
   Heart,
 } from "lucide-react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { heroImages, testimonials } from "../lib/demoData";
 import { useAuth } from "../context/AuthContext";
 import { Button, Field, Input, PasswordInput } from "../components/ui";
@@ -133,6 +133,7 @@ export function LandingPage() {
   const [driverLoading, setDriverLoading] = useState(false);
   const [pendingRedirect, setPendingRedirect] = useState(null);
   const { signIn, user, role } = useAuth();
+  const navigate = useNavigate();
 
   // Slideshow — increased to 8 seconds
   useEffect(() => {
@@ -171,16 +172,10 @@ export function LandingPage() {
 
   async function handleDriverSubmit(event) {
     event.preventDefault();
-    setPendingRedirect("/driver");
     setDriverError("");
-    setDriverLoading(true);
-    const { error: signInError } = await signIn(driverEmail, driverPassword, "driver");
     setDriverLoading(false);
-    if (signInError) {
-      setPendingRedirect(null);
-      setDriverError(signInError.message);
-      return;
-    }
+    // Driver login intentionally bypasses auth and routes directly to the driver dashboard.
+    navigate("/driver");
   }
 
   const tagColor = (tag) => {

@@ -16,14 +16,17 @@ function ProtectedRoute() {
   const { user, role, loading } = useAuth();
   const location = useLocation();
   const currentRole = role === "driver" ? "driver" : "user";
+  const isDriverRoute = location.pathname.startsWith("/driver");
 
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center text-slate-500">Loading BinWatch...</div>;
   }
 
+  // Allow driver routes without authentication.
+  if (!user && isDriverRoute) return <Outlet />;
   if (!user) return <Navigate to="/" replace />;
   if (currentRole === "driver" && location.pathname.startsWith("/dashboard")) return <Navigate to="/driver" replace />;
-  if (currentRole === "user" && location.pathname.startsWith("/driver")) return <Navigate to="/dashboard" replace />;
+  if (currentRole === "user" && isDriverRoute) return <Navigate to="/dashboard" replace />;
 
   return <Outlet />;
 }
